@@ -1,4 +1,7 @@
 # Urban-SemSeg
+
+<p align="center"><img src="teaser.png" width="1000"></p>
+
 A pipeline to segment high-resolution point clouds representing urban environments into geometric primitives; we focus on planes, cylinders and spheres, which are the main features of buildings (walls, roofs, arches, ...) and
 ground surfaces (streets, pavements, platforms), and identify the unique parameters of each instance. 
 
