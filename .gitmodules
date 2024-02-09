@@ -1,0 +1,6 @@
+[submodule "external/RANSAC"]
+	path = external/RANSAC
+	url = https://github.com/alessandro-gentilini/Efficient-RANSAC-for-Point-Cloud-Shape-Detection.git
+[submodule "external/tclap"]
+	path = external/tclap
+	url = https://github.com/mirror/tclap.git
