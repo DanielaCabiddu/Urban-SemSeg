@@ -3,11 +3,11 @@ cmake_minimum_required(VERSION 3.5)
 project(ransac LANGUAGES CXX)
 
 ##TCLAP
-set (TCLAP_DIR ${CMAKE_SOURCE_DIR}/../../external/tclap/include)
+set (TCLAP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../external/tclap/include)
 include_directories (${TCLAP_DIR})
 
 ##RANSAC
-set (RANSAC_DIR ${CMAKE_SOURCE_DIR}/../../external/RANSAC)
+set (RANSAC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../external/RANSAC)
 set (RANSAC_LIB ${RANSAC_DIR}/build/liblibransac.a)
 
 add_custom_command(
