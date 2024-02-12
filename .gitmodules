@@ -4,3 +4,9 @@
 [submodule "external/tclap"]
 	path = external/tclap
 	url = https://github.com/mirror/tclap.git
+[submodule "external/stxxl"]
+	path = external/stxxl
+	url = https://github.com/stxxl/stxxl.git
+[submodule "external/libLAS"]
+	path = external/libLAS
+	url = https://github.com/libLAS/libLAS.git
