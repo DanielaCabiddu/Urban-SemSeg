@@ -27,8 +27,8 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -G "Visual Studio 17 2022" ../src/
-          cmake --build . --parallel 16 --config Release
+          cmake ../src/ -G "Visual Studio 17 2022" 
+          cmake --build . --config Release
       #- name: Run
         #run: |
           #./run.sh
