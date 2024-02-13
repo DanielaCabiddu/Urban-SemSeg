@@ -17,12 +17,12 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name : Fix STXXL
-      	run: |
-	      sed -i '25d' external/stxxl/include/stxxl/bits/msvc_compatibility.h
+      - name: Fix STXXL
+        run: |
+          sed -i '25d' external/stxxl/include/stxxl/bits/msvc_compatibility.h
           sed -i '24d' external/stxxl/include/stxxl/bits/msvc_compatibility.h
           sed -i '23d' external/stxxl/include/stxxl/bits/msvc_compatibility.h
-          sed -i '22d' external/stxxl/include/stxxl/bits/msvc_compatibility.h 
+          sed -i '22d' external/stxxl/include/stxxl/bits/msvc_compatibility.h
       - name: Build
         run: |
           mkdir build
