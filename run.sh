@@ -16,8 +16,10 @@ for f in $FILES
 do
 	echo "=============================="
 	echo "RANSAC: $f ..."
+	OUT_DIR="${f%.*}"
+	mkdir -p ${OUT_DIR}
 	# take action on each file. $f store current file name
-	./ransac -i $f -P -C
+	./ransac -i $f -P -C -S -o ${OUT_DIR}
 	echo "=============================="
 done
 
