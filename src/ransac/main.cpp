@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     float m_epsilon = 0.05f;
     float m_bitmapEpsilon = 0.1f;
     float m_normalThresh = .99f;
-    float m_minSupport = 500;
+    float m_minSupport = FLT_MAX;
     float m_probability = .01f;
 
     try {
@@ -142,12 +142,17 @@ int main(int argc, char **argv)
     //void calcNormals( float radius, unsigned int kNN = 20, unsigned int maxTries = 100 );
     pc.calcNormals(3);
 
+    if (!(m_minSupport < FLT_MAX))
+        m_minSupport = 0.005 * points.size();
+
+    std::cout << "m_minSupport: " << m_minSupport << std::endl;
+
     std::cout << "added " << pc.size() << " points" << std::endl;
 
     std::cout << "Setting RANSAC Options ..." << std::endl;
 
     RansacShapeDetector::Options ransacOptions;
-    ransacOptions.m_epsilon = m_epsilon; //.2f * pc.getScale(); // set distance threshold to .01f of bounding box width
+    ransacOptions.m_epsilon = m_epsilon / 3.0; //.2f * pc.getScale(); // set distance threshold to .01f of bounding box width
         // NOTE: Internally the distance threshold is taken as 3 * ransacOptions.m_epsilon!!!
     ransacOptions.m_bitmapEpsilon = m_bitmapEpsilon;//.02f * pc.getScale(); // set bitmap resolution to .02f of bounding box width
         // NOTE: This threshold is NOT multiplied internally!
@@ -192,29 +197,13 @@ int main(int argc, char **argv)
 
     std::cout << "Remaining Unassigned Points " << remaining << std::endl;
 
+    uint start = pc.size() - shapes[0].second;
+    uint end = pc.size();
+
     for(uint i=0; i<shapes.size(); i++)
     {
         std::string desc;
         shapes[i].first->Description(&desc);
-
-        uint start = 0;
-        uint end = 0;
-
-        if (i > 0)
-        {
-            for (uint j=1; j < i+1; j++)
-            {
-                end += shapes[j].second;
-
-                if (j < i)
-                    start += shapes[j].second;
-            }
-        }
-        else
-        {
-            start = pc.size() - shapes[i].second;
-            end = pc.size();
-        }
 
         std::cout << "shape " << i << " consists of " << shapes[i].second << " points, it is a " << desc
                   << " [" << start << ", " << end << "] " << std::endl;
@@ -237,5 +226,8 @@ int main(int argc, char **argv)
 
             ofile.close();
         }
+
+        end = start;
+        start = end - shapes[i+1].second;
     }
 }
