@@ -61,7 +61,7 @@ add_custom_command(
   WORKING_DIRECTORY ${LIBLAS_BUILD}
 )
 
-find_package(Boost REQUIRED)
+find_package(Boost)
 
 if (NOT BOOST_FOUND AND MSVC)
     if(NOT DEFINED ${CMAKE_TOOLCHAIN_FILE})
