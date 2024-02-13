@@ -8,7 +8,12 @@ include_directories (${TCLAP_DIR})
 
 ##RANSAC
 set (RANSAC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../external/RANSAC)
-set (RANSAC_LIB ${RANSAC_DIR}/build/liblibransac.a)
+
+if (MSVC)
+set (RANSAC_LIB ${RANSAC_DIR}/build/liblibransac.lib)
+else()
+    set (RANSAC_LIB ${RANSAC_DIR}/build/liblibransac.a)
+endif()
 
 add_custom_command(
     OUTPUT ${RANSAC_LIB}
