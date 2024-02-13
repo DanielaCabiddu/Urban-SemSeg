@@ -1,0 +1,28 @@
+name: windows-build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+    - .github/workflows/windows.yml
+    - src
+    - build.sh
+    - run.sh
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Build
+        run: |
+          mkdir build
+          cd build
+          cmake -G "Visual Studio 17 2022" ../src/
+          cmake --build . --parallel 16 --config Release
+      #- name: Run
+        #run: |
+          #./run.sh
