@@ -9,12 +9,14 @@
 #include <TorusPrimitiveShapeConstructor.h>
 
 #include <cfloat>
+#include <fstream>
 #include <iostream>
 #include <tclap/CmdLine.h>
 
 int main(int argc, char **argv)
 {
     std::string input_filename;
+    std::string output_directory;
 
     bool detect_plane = false;
     bool detect_cylinder = false;
@@ -39,6 +41,7 @@ int main(int argc, char **argv)
         TCLAP::CmdLine cmd("", ' ', "0.9");
 
         TCLAP::ValueArg<std::string> inputFileArg ("i","input","Input File",true,"","string");
+        TCLAP::ValueArg<std::string> outputDirArg ("o","output","Output Directory",true,"","string");
 
         TCLAP::SwitchArg planeSwitch("P","plane","Detect planes",false);
         TCLAP::SwitchArg cylinderSwitch("C","cylinder","Detect cylinder",false);
@@ -54,6 +57,7 @@ int main(int argc, char **argv)
 
 
         cmd.add( inputFileArg );
+        cmd.add( outputDirArg );
         cmd.add( planeSwitch );
         cmd.add( cylinderSwitch );
         cmd.add( sphereSwitch );
@@ -70,6 +74,7 @@ int main(int argc, char **argv)
         cmd.parse( argc, argv );
 
         input_filename = inputFileArg.getValue();
+        output_directory = outputDirArg.getValue();
 
         detect_plane = planeSwitch.isSet();
         detect_cylinder = cylinderSwitch.isSet();
@@ -131,12 +136,6 @@ int main(int argc, char **argv)
         if (points.at(i).pos[2] > bbmax[2])
             bbmax[2] = points.at(i).pos[2];
     }
-
-    std::cout << minx << ", " << miny << ", " << minz << std::endl;
-    std::cout << bbmin[0] << ", " << bbmin[1] << ", " << bbmin[2] << std::endl;
-
-    std::cout << maxx << ", " << maxy << ", " << maxz << std::endl;
-    std::cout << bbmax[0] << ", " << bbmax[1] << ", " << bbmax[2] << std::endl;
 
     // set the bbox in pc
     pc.setBBox(bbmin, bbmax);
@@ -220,6 +219,23 @@ int main(int argc, char **argv)
         std::cout << "shape " << i << " consists of " << shapes[i].second << " points, it is a " << desc
                   << " [" << start << ", " << end << "] " << std::endl;
 
+        std::string filename = output_directory + "/" + desc + "_" + std::to_string(i) + ".txt";
+        std::ofstream ofile;
+        ofile.open(filename);
 
+        if (!ofile.is_open())
+        {
+            std::cerr << "Error opening " << filename << std::endl;
+        }
+        else
+        {
+            for (uint p=0; p < shapes[i].second; p++)
+                ofile << std::setprecision(8)
+                      << pc.at(start+p).pos[0] + minx << " "
+                      << pc.at(start+p).pos[1] + miny << " "
+                      << pc.at(start+p).pos[2] + minz << std::endl;
+
+            ofile.close();
+        }
     }
 }
