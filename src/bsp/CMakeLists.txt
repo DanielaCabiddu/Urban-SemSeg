@@ -115,8 +115,20 @@ if (NOT BOOST_FOUND AND MSVC)
        set(VCPKG_PLATFORM_TOOLSET v142)
 
        execute_process(
-                   COMMAND ${VCPKG_EXEC} install boost --triplet x64-windows-static --recurse
+                   COMMAND ${VCPKG_EXEC} install boost-iostreams --triplet x64-windows-static --recurse
                    WORKING_DIRECTORY ${VCPKG_ROOT})
+
+               execute_process(
+                           COMMAND ${VCPKG_EXEC} install boost-program-options --triplet x64-windows-static --recurse
+                           WORKING_DIRECTORY ${VCPKG_ROOT})
+
+                       execute_process(
+                                   COMMAND ${VCPKG_EXEC} install boost-serialization --triplet x64-windows-static --recurse
+                                   WORKING_DIRECTORY ${VCPKG_ROOT})
+
+                               execute_process(
+                                           COMMAND ${VCPKG_EXEC} install boost-thread --triplet x64-windows-static --recurse
+                                           WORKING_DIRECTORY ${VCPKG_ROOT})
 
        message ("Setting Boost MACROS")
        set (Boost_INCLUDE_DIRS "${VCPKG_ROOT}/packages/" )
