@@ -10,15 +10,17 @@ include_directories (${TCLAP_DIR})
 set (RANSAC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../external/RANSAC)
 
 if (MSVC)
-set (RANSAC_LIB ${RANSAC_DIR}/build/liblibransac.lib)
+set (RANSAC_LIB ${RANSAC_DIR}/build/Release/libransac.lib)
 else()
     set (RANSAC_LIB ${RANSAC_DIR}/build/liblibransac.a)
 endif()
 
+file(MAKE_DIRECTORY ${RANSAC_DIR}/build)
+
 add_custom_command(
     OUTPUT ${RANSAC_LIB}
-    COMMAND mkdir -p build && cd build && cmake .. && cmake --build .
-    WORKING_DIRECTORY ${RANSAC_DIR}
+    COMMAND cmake .. && cmake --build .
+    WORKING_DIRECTORY ${RANSAC_DIR}/build
 )
 
 include_directories (${RANSAC_DIR})

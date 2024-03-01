@@ -7,59 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option (USE_CEREAL OFF)
 
-################## STXXL
-
-add_definitions(-DSTXXL)
-
-set (STXXL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../external/stxxl)
-set (STXXL_BUILD ${STXXL_DIR}/build)
-set (STXXL_LIB ${STXXL_BUILD}/lib/libstxxl.a)
-
-file(MAKE_DIRECTORY ${STXXL_BUILD})
-
-if(MSVC)
-    set (STXXL_LIB ${STXXL_BUILD}/lib/Release/stxxl.lib)
-
-    add_custom_command(
-              OUTPUT ${STXXL_LIB}
-              COMMAND cmake .. -DCMAKE_BUILD_TYPE=Release && cmake --build . --config Release ##${CMAKE_BUILD_TYPE}
-              #DEPENDS ${SOURCE_FILES} /tmp/bin/create_foo_hh main.cpp
-              WORKING_DIRECTORY ${STXXL_BUILD}
-            )
-
-    else()
-            add_custom_command(
-                    OUTPUT ${STXXL_LIB}
-                    COMMAND cmake .. -DCMAKE_BUILD_TYPE=Release && cmake --build .
-                    #DEPENDS ${SOURCE_FILES} /tmp/bin/create_foo_hh main.cpp
-                    WORKING_DIRECTORY ${STXXL_BUILD}
-            )
-endif()
-
-include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/../../external/stxxl/include)
-include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/../../external/stxxl/build/include)
-
-################## LIBLAS
-
-set (LIBLAS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../external/libLAS)
-set (LIBLAS_BUILD ${LIBLAS_DIR}/build)
-
-file(MAKE_DIRECTORY ${LIBLAS_BUILD})
-
-if (APPLE)
-    set (LIBLAS_LIB ${LIBLAS_BUILD}/bin/Release/liblas.dylib)
-elseif (UNIX)
-    set (LIBLAS_LIB ${LIBLAS_BUILD}/bin/Release/liblas.so)
-    elseif (MSVC)
-        set (LIBLAS_LIB ${LIBLAS_BUILD}/bin/Release/las.dll)
-endif()
-
-add_custom_command(
-  OUTPUT ${LIBLAS_LIB}
-  COMMAND cmake -DCMAKE_BUILD_TYPE=Release -DWITH_GEOTIFF=OFF -DBUILD_OSGEO4W=OFF .. && cmake --build .
-  #DEPENDS ${SOURCE_FILES} /tmp/bin/create_foo_hh main.cpp
-  WORKING_DIRECTORY ${LIBLAS_BUILD}
-)
+##############################################
 
 find_package(Boost)
 
@@ -115,29 +63,88 @@ if (NOT BOOST_FOUND AND MSVC)
        set(VCPKG_PLATFORM_TOOLSET v142)
 
        execute_process(
-                   COMMAND ${VCPKG_EXEC} install boost-iostreams --triplet x64-windows-static --recurse
+                   COMMAND ${VCPKG_EXEC} install boost --triplet x64-windows --recurse
                    WORKING_DIRECTORY ${VCPKG_ROOT})
 
-               execute_process(
-                           COMMAND ${VCPKG_EXEC} install boost-program-options --triplet x64-windows-static --recurse
-                           WORKING_DIRECTORY ${VCPKG_ROOT})
-
-                       execute_process(
-                                   COMMAND ${VCPKG_EXEC} install boost-serialization --triplet x64-windows-static --recurse
-                                   WORKING_DIRECTORY ${VCPKG_ROOT})
-
-                               execute_process(
-                                           COMMAND ${VCPKG_EXEC} install boost-thread --triplet x64-windows-static --recurse
-                                           WORKING_DIRECTORY ${VCPKG_ROOT})
-
        message ("Setting Boost MACROS")
-       set (Boost_INCLUDE_DIRS "${VCPKG_ROOT}/packages/" )
+       set (Boost_INCLUDE_DIRS "${VCPKG_ROOT}/installed/x64-windows/include" )
 
-   endif()
+    endif()
 endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
+
+################## STXXL
+
+add_definitions(-DSTXXL)
+
+set (STXXL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../external/stxxl)
+set (STXXL_BUILD ${STXXL_DIR}/build)
+set (STXXL_LIB ${STXXL_BUILD}/lib/libstxxl.a)
+
+file(MAKE_DIRECTORY ${STXXL_BUILD})
+
+if(MSVC)
+    set (STXXL_LIB ${STXXL_BUILD}/lib/Release/stxxl.lib)
+
+    add_custom_command(
+              OUTPUT ${STXXL_LIB}
+              COMMAND cmake -DUSE_BOOST=OFF .. && cmake --build . --config Release ##${CMAKE_BUILD_TYPE}
+              #DEPENDS ${SOURCE_FILES} /tmp/bin/create_foo_hh main.cpp
+              WORKING_DIRECTORY ${STXXL_BUILD}
+            )
+
+    else()
+            add_custom_command(
+                    OUTPUT ${STXXL_LIB}
+                    COMMAND cmake .. -DCMAKE_BUILD_TYPE=Release && cmake --build .
+                    #DEPENDS ${SOURCE_FILES} /tmp/bin/create_foo_hh main.cpp
+                    WORKING_DIRECTORY ${STXXL_BUILD}
+            )
+endif()
+
+include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/../../external/stxxl/include)
+include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/../../external/stxxl/build/include)
+
+################## LIBLAS
+
+set (LIBLAS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../external/libLAS)
+set (LIBLAS_BUILD ${LIBLAS_DIR}/build)
+
+file(MAKE_DIRECTORY ${LIBLAS_BUILD})
+
+if (APPLE)
+    set (LIBLAS_LIB ${LIBLAS_BUILD}/bin/Release/liblas.dylib)
+elseif (UNIX)
+    set (LIBLAS_LIB ${LIBLAS_BUILD}/bin/Release/liblas.so)
+    elseif (MSVC)
+        set (LIBLAS_LIB ${LIBLAS_BUILD}/bin/Release/liblas.lib)
+endif()
+
+
+if (MSVC)
+
+    add_custom_command(
+      OUTPUT ${LIBLAS_LIB}
+      COMMAND cmake -DWITH_GEOTIFF=OFF -DBUILD_OSGEO4W=OFF -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE} .. && cmake --build . --config Release
+      #DEPENDS ${SOURCE_FILES} /tmp/bin/create_foo_hh main.cpp
+      WORKING_DIRECTORY ${LIBLAS_BUILD}
+    )
+
+else()
+
+    add_custom_command(
+          OUTPUT ${LIBLAS_LIB}
+          COMMAND cmake -DWITH_GEOTIFF=OFF -DBUILD_OSGEO4W=OFF .. && cmake --build .
+          #DEPENDS ${SOURCE_FILES} /tmp/bin/create_foo_hh main.cpp
+          WORKING_DIRECTORY ${LIBLAS_BUILD}
+        )
+
+endif()
+
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/../../external/libLAS/include)
+
+######################################################################################################################################
 
 ######### EXTERNALS
 
@@ -158,3 +165,17 @@ endif()
 add_executable(${PROJECT_NAME} main.cpp ${STXXL_LIB} ${LIBLAS_LIB})
 
 target_link_libraries(${PROJECT_NAME} ${STXXL_LIB} ${LIBLAS_LIB})
+
+################################
+### Copy deps into the build directory
+
+file(GLOB LIBLAS_DLLs ${LIBLAS_BUILD}/bin/Release/*.dll)
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${LIBLAS_DLLs} ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>
+)
+
+##file(GLOB BOOST_DLLs ${Boost_INCLUDE_DIRS}/../bin/*.dll)
+
+##add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+##                   COMMAND ${CMAKE_COMMAND} -E copy ${BOOST_DLLs} ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>)

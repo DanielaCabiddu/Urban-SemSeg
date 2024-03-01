@@ -3,6 +3,7 @@
 #include <cfloat>
 #include <fstream>
 #include <vector>
+#include <iostream>
 
 bool read_input_pc (const std::string filename, MiscLib::Vector<Point> &points,
                    double &minx, double &miny, double &minz,
@@ -11,7 +12,7 @@ bool read_input_pc (const std::string filename, MiscLib::Vector<Point> &points,
     if (filename.substr(filename.find_first_of(".")).compare(".xyz") == 0)
         return read_input_xyz (filename, points, minx, miny, minz, maxx, maxy, maxz);
 
-    std::cerr << "Unsupport file format: " << filename << std::endl;
+    //std::cerr << "Unsupport file format: " << filename << std::endl;
     return false;
 }
 
@@ -24,7 +25,7 @@ bool read_input_xyz (const std::string filename, MiscLib::Vector<Point> &points,
 
     if (!file.is_open())
     {
-        std::cerr << "Error opening " << filename << std::endl;
+        //std::cerr << "Error opening " << filename << std::endl;
         return false;
     }
 
@@ -60,7 +61,7 @@ bool read_input_xyz (const std::string filename, MiscLib::Vector<Point> &points,
 
     file.close();
 
-    for (uint i=0; i < xx.size(); i++)
+    for (unsigned int i=0; i < xx.size(); i++)
     {
         points.push_back(Point(Vec3f(xx[i]-minx,yy[i]-miny,zz[i]-minz)));
     }

@@ -121,7 +121,7 @@ void write_bsp_LAS( BinarySpacePartition &bsp,
         double x,y,z;
 
         int vid = 0;
-        uint curr_infile_id = 0;
+        unsigned int curr_infile_id = 0;
 
         std::ifstream infile;
         infile.open(input_filenames.at(0));
@@ -142,8 +142,8 @@ void write_bsp_LAS( BinarySpacePartition &bsp,
             // if the input is a las colection of files
             if (input_filenames.at(0).substr(input_filenames.at(0).find_last_of(".")).compare(".las") == 0)
             {
-                uint file_id;
-                for (uint i=0; i < infile2lastv.size(); i++)
+                unsigned int file_id;
+                for (unsigned int i=0; i < infile2lastv.size(); i++)
                     if (id <= infile2lastv.at(i))
                     {
                         file_id=i;
@@ -160,7 +160,7 @@ void write_bsp_LAS( BinarySpacePartition &bsp,
                 }
 
                 stxxl::uint64 last_prev = (curr_infile_id==0) ? 0 : infile2lastv.at(curr_infile_id-1)+1;
-                uint nv = reader->GetHeader().GetPointRecordsCount();
+                unsigned int nv = reader->GetHeader().GetPointRecordsCount();
 
                 reader->ReadPointAt(id-last_prev);
                 point = reader->GetPoint();

@@ -123,7 +123,7 @@ int main(int argc, char **argv)
     bbmax.setValue(-FLT_MAX,-FLT_MAX,-FLT_MAX);
 
     // fill or load point cloud from file
-    for(uint i=0; i<points.size(); i++)
+    for(unsigned int i=0; i<points.size(); i++)
     {
         pc.push_back(points.at(i));
 
@@ -197,10 +197,10 @@ int main(int argc, char **argv)
 
     std::cout << "Remaining Unassigned Points " << remaining << std::endl;
 
-    uint start = pc.size() - shapes[0].second;
-    uint end = pc.size();
+    unsigned int start = pc.size() - shapes[0].second;
+    unsigned int end = pc.size();
 
-    for(uint i=0; i<shapes.size(); i++)
+    for(unsigned int i=0; i<shapes.size(); i++)
     {
         std::string desc;
         shapes[i].first->Description(&desc);
@@ -218,7 +218,7 @@ int main(int argc, char **argv)
         }
         else
         {
-            for (uint p=0; p < shapes[i].second; p++)
+            for (unsigned int p=0; p < shapes[i].second; p++)
                 ofile << std::setprecision(8)
                       << pc.at(start+p).pos[0] + minx << " "
                       << pc.at(start+p).pos[1] + miny << " "
