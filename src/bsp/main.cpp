@@ -32,6 +32,10 @@
 #include <tclap/CmdLine.h>
 #include <iostream>
 
+#if STXXL_WINDOWS
+#define STXXL_WINDOWS 0
+#endif
+
 using namespace std;
 
 int main(int argc, char** argv)

@@ -79,37 +79,39 @@ include_directories(${Boost_INCLUDE_DIRS})
 add_definitions(-DSTXXL)
 
 set (STXXL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../external/stxxl)
-set (STXXL_BUILD ${STXXL_DIR}/build)
+set (STXXL_BUILD ${STXXL_DIR}/build-${CMAKE_SYSTEM_NAME})
 set (STXXL_LIB ${STXXL_BUILD}/lib/libstxxl.a)
 
 file(MAKE_DIRECTORY ${STXXL_BUILD})
 
 if(MSVC)
+
     set (STXXL_LIB ${STXXL_BUILD}/lib/Release/stxxl.lib)
 
     add_custom_command(
               OUTPUT ${STXXL_LIB}
-              COMMAND cmake -DUSE_BOOST=OFF .. && cmake --build . --config Release ##${CMAKE_BUILD_TYPE}
+              COMMAND cmake -DUSE_BOOST=OFF -DBUILD_TESTING=OFF .. && cmake --build . --config Release ##${CMAKE_BUILD_TYPE}
               #DEPENDS ${SOURCE_FILES} /tmp/bin/create_foo_hh main.cpp
               WORKING_DIRECTORY ${STXXL_BUILD}
             )
 
-    else()
-            add_custom_command(
-                    OUTPUT ${STXXL_LIB}
-                    COMMAND cmake .. -DCMAKE_BUILD_TYPE=Release && cmake --build .
-                    #DEPENDS ${SOURCE_FILES} /tmp/bin/create_foo_hh main.cpp
-                    WORKING_DIRECTORY ${STXXL_BUILD}
-            )
+else()
+
+    add_custom_command(
+            OUTPUT ${STXXL_LIB}
+            COMMAND cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build .
+            #DEPENDS ${SOURCE_FILES} /tmp/bin/create_foo_hh main.cpp
+            WORKING_DIRECTORY ${STXXL_BUILD}
+    )
 endif()
 
-include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/../../external/stxxl/include)
-include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/../../external/stxxl/build/include)
+include_directories(BEFORE ${STXXL_DIR}/include)
+include_directories(BEFORE ${STXXL_BUILD}/include)
 
 ################## LIBLAS
 
 set (LIBLAS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../external/libLAS)
-set (LIBLAS_BUILD ${LIBLAS_DIR}/build)
+set (LIBLAS_BUILD ${LIBLAS_DIR}/build-${CMAKE_SYSTEM_NAME})
 
 file(MAKE_DIRECTORY ${LIBLAS_BUILD})
 
@@ -169,11 +171,15 @@ target_link_libraries(${PROJECT_NAME} ${STXXL_LIB} ${LIBLAS_LIB})
 ################################
 ### Copy deps into the build directory
 
-file(GLOB LIBLAS_DLLs ${LIBLAS_BUILD}/bin/Release/*.dll)
+if (MSVC)
 
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${LIBLAS_DLLs} ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>
-)
+    file(GLOB LIBLAS_DLLs ${LIBLAS_BUILD}/bin/Release/*.dll)
+
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy ${LIBLAS_DLLs} ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>
+    )
+ 
+endif()
 
 ##file(GLOB BOOST_DLLs ${Boost_INCLUDE_DIRS}/../bin/*.dll)
 
