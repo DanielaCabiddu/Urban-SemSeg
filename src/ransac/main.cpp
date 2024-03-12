@@ -24,11 +24,11 @@ int main(int argc, char **argv)
     bool detect_cone = false;
     bool detect_torus = false;
 
-    float m_epsilon = 0.05f;
-    float m_bitmapEpsilon = 0.1f;
-    float m_normalThresh = .99f;
-    float m_minSupport = FLT_MAX;
-    float m_probability = .01f;
+    float m_epsilon = .005;
+    float m_bitmapEpsilon = .01;
+    float m_normalThresh = .906307787;
+    float m_minSupport = .005;
+    float m_probability = .01;
 
     try {
 
@@ -142,28 +142,28 @@ int main(int argc, char **argv)
     //void calcNormals( float radius, unsigned int kNN = 20, unsigned int maxTries = 100 );
     pc.calcNormals(3);
 
-    if (!(m_minSupport < FLT_MAX))
-        m_minSupport = 0.005 * points.size();
-
-    std::cout << "m_minSupport: " << m_minSupport << std::endl;
-
-    std::cout << "added " << pc.size() << " points" << std::endl;
-
+    std::cout << "==========================" << std::endl;
     std::cout << "Setting RANSAC Options ..." << std::endl;
 
     RansacShapeDetector::Options ransacOptions;
-    ransacOptions.m_epsilon = m_epsilon / 3.0; //.2f * pc.getScale(); // set distance threshold to .01f of bounding box width
+    ransacOptions.m_epsilon = m_epsilon * pc.getScale() / 3.0; // set distance threshold to .01f of bounding box width
         // NOTE: Internally the distance threshold is taken as 3 * ransacOptions.m_epsilon!!!
-    ransacOptions.m_bitmapEpsilon = m_bitmapEpsilon;//.02f * pc.getScale(); // set bitmap resolution to .02f of bounding box width
+    ransacOptions.m_bitmapEpsilon = m_bitmapEpsilon * pc.getScale(); // set bitmap resolution to .02f of bounding box width
         // NOTE: This threshold is NOT multiplied internally!
     ransacOptions.m_normalThresh = m_normalThresh; // this is the cos of the maximal normal deviation
-    ransacOptions.m_minSupport = m_minSupport; // this is the minimal numer of points required for a primitive
+    ransacOptions.m_minSupport = m_minSupport * points.size(); // this is the minimal numer of points required for a primitive
     ransacOptions.m_probability = m_probability; // this is the "probability" with which a primitive is overlooked
+
+    std::cout << "epsilon: " << ransacOptions.m_epsilon << " [" << m_epsilon << " * " << pc.getScale() << " ]" << std::endl;
+    std::cout << "bitmapEpsilon: " << ransacOptions.m_bitmapEpsilon << " [" << m_bitmapEpsilon << " * " << pc.getScale() << " ]" << std::endl;
+    std::cout << "normalThresh: " << ransacOptions.m_normalThresh << std::endl;
+    std::cout << "minSupport: " << ransacOptions.m_minSupport << " [" << m_minSupport << " * " << points.size() << " ]" << std::endl;
 
 
     RansacShapeDetector detector(ransacOptions); // the detector object
 
     std::cout << "Setting RANSAC Options ... COMPLETED" << std::endl;
+    std::cout << "====================================" << std::endl;
 
     // set which primitives are to be detected by adding the respective constructors
     if (detect_plane)

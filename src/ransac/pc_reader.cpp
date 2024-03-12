@@ -43,7 +43,9 @@ bool read_input_xyz (const std::string filename, MiscLib::Vector<Point> &points,
     std::vector<double> yy;
     std::vector<double> zz;
 
-    while (file >> x >> y >> z)
+    double a, b, c, d, e;
+
+    while (file >> x >> y >> z /* >> a >> b >> c >> d >> e*/)
     {
         //points.push_back(Point(Vec3f(x,y,z)));
         xx.push_back(x);
@@ -67,6 +69,12 @@ bool read_input_xyz (const std::string filename, MiscLib::Vector<Point> &points,
     }
 
     std::cout << "Loaded " << points.size() << " points" << std::endl;
+
+    std::ofstream file_mm;
+    file_mm.open("min_max.txt", std::ofstream::app);
+
+    file_mm << minz << " " << maxz << std::endl;
+    file_mm.close();
 
     return true;
 }
