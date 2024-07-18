@@ -27,7 +27,12 @@ int main(int argc, char *argv[])
 {
 
     std::string input_filename;
-    std::string output_directory;
+    std::string output_filename;
+
+    double angle = 40;
+    double distance = 2;
+    unsigned int region_size = 5000;
+    unsigned int k_par = 12;
 
     try {
 
@@ -40,16 +45,39 @@ int main(int argc, char *argv[])
         TCLAP::CmdLine cmd("", ' ', "0.9");
 
         TCLAP::ValueArg<std::string> inputFileArg ("i","input","Input File",true,"","string");
-        TCLAP::ValueArg<std::string> outputDirArg ("o","output","Output Directory",true,"","string");
+        TCLAP::ValueArg<std::string> outputFileArg ("o","output","Output File [.ply]",true,"","string");
+
+        TCLAP::ValueArg<std::string> angleArg ("a","max_angle","Max angle [default: 40]",false,"","double");
+        TCLAP::ValueArg<std::string> distanceArg ("d","max_distance","Max Distance [default: 2]",false,"","double");
+        TCLAP::ValueArg<std::string> sizeArg ("s","region_size","Region Size [default: 5000]",false,"","unsigned integer");
+        TCLAP::ValueArg<std::string> kArg ("k","k_neighbors","K-neighbors [default: 12]",false,"","unsigned integer");
 
         cmd.add( inputFileArg );
-        cmd.add( outputDirArg );
+        cmd.add( outputFileArg );
+        cmd.add( angleArg );
+        cmd.add( distanceArg );
+        cmd.add( sizeArg );
+        cmd.add( kArg );
+
 
         // Parse the argv array.
         cmd.parse( argc, argv );
 
         input_filename = inputFileArg.getValue();
-        output_directory = outputDirArg.getValue();
+        output_filename = outputFileArg.getValue();
+
+        if (angleArg.isSet())
+            angle = std::atof(angleArg.getValue().c_str());
+
+        if (distanceArg.isSet())
+            distance = std::atof(distanceArg.getValue().c_str());
+
+        if (sizeArg.isSet())
+            region_size = std::atoi(sizeArg.getValue().c_str());
+
+        if (kArg.isSet())
+            k_par = std::atoi(kArg.getValue().c_str());
+
 
     }
     catch (std::exception e)
@@ -76,10 +104,10 @@ int main(int argc, char *argv[])
 
 
     // Default parameter values for the data file building.xyz.
-    const std::size_t k               = 12;
-    const FT          max_distance    = FT(2);
-    const FT          max_angle       = FT(40);
-    const std::size_t min_region_size = 5000;
+    const std::size_t k               = k_par;
+    const FT          max_distance    = FT(distance);
+    const FT          max_angle       = FT(angle);
+    const std::size_t min_region_size = region_size;
     // Create instances of the classes Neighbor_query and Region_type.
     Neighbor_query neighbor_query = CGAL::Shape_detection::Point_set::make_k_neighbor_query(
         point_set, CGAL::parameters::k_neighbors(k));
@@ -105,7 +133,7 @@ int main(int argc, char *argv[])
     std::cout << "* number of found planes: " << number_of_regions << std::endl;
     assert(!is_default_input || number_of_regions == 7);
     // Save regions to a file.
-    const std::string fullpath =  "planes_point_set_3.ply";
+    const std::string fullpath =  output_filename;
     std::ofstream out(fullpath);
     out << output_range;
     out.close();
