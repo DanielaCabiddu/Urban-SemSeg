@@ -146,7 +146,9 @@ int main(int argc, char **argv)
     std::cout << "Setting RANSAC Options ..." << std::endl;
 
     RansacShapeDetector::Options ransacOptions;
-    ransacOptions.m_epsilon = m_epsilon * pc.getScale() / 3.0; // set distance threshold to .01f of bounding box width
+    ransacOptions.m_epsilon = m_epsilon * pc.getScale() ; // set distance threshold to .01f of bounding box width
+
+    ransacOptions.m_epsilon /= 3;
         // NOTE: Internally the distance threshold is taken as 3 * ransacOptions.m_epsilon!!!
     ransacOptions.m_bitmapEpsilon = m_bitmapEpsilon * pc.getScale(); // set bitmap resolution to .02f of bounding box width
         // NOTE: This threshold is NOT multiplied internally!
@@ -158,6 +160,14 @@ int main(int argc, char **argv)
     std::cout << "bitmapEpsilon: " << ransacOptions.m_bitmapEpsilon << " [" << m_bitmapEpsilon << " * " << pc.getScale() << " ]" << std::endl;
     std::cout << "normalThresh: " << ransacOptions.m_normalThresh << std::endl;
     std::cout << "minSupport: " << ransacOptions.m_minSupport << " [" << m_minSupport << " * " << points.size() << " ]" << std::endl;
+
+
+    if (ransacOptions.m_minSupport < 10)
+    {
+        std::cerr << "point cloud is too small... IGNORED" << std::endl;
+        exit(2);
+    }
+
 
 
     RansacShapeDetector detector(ransacOptions); // the detector object
@@ -219,7 +229,7 @@ int main(int argc, char **argv)
         else
         {
             for (unsigned int p=0; p < shapes[i].second; p++)
-                ofile << std::setprecision(8)
+                ofile << std::setprecision(10)
                       << pc.at(start+p).pos[0] + minx << " "
                       << pc.at(start+p).pos[1] + miny << " "
                       << pc.at(start+p).pos[2] + minz << std::endl;
