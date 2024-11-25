@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(cgal-shape-detection LANGUAGES CXX)
+project(cgal LANGUAGES CXX)
 
 ##TCLAP
 set (TCLAP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../external/tclap/include)
 include_directories (${TCLAP_DIR})
 
-find_package(CGAL COMPONENTS Core)
+find_package (Boost)
 
-if (NOT CGAL_FOUND AND MSVC)
+if (NOT Boost_FOUND AND MSVC)
     if(NOT DEFINED ${CMAKE_TOOLCHAIN_FILE})
         #if(NOT DEFINED ENV{VCPKG_ROOT})
             #if(WIN32)
@@ -59,15 +59,11 @@ if (NOT CGAL_FOUND AND MSVC)
         #message(STATUS "***** Checking project third party dependencies in ${VCPKG_ROOT} *****")
         set(VCPKG_PLATFORM_TOOLSET v142)
 
-        # execute_process(
-        #     COMMAND ${VCPKG_EXEC} install cgal --triplet x64-windows-static --recurse
-        #     WORKING_DIRECTORY ${VCPKG_ROOT})
+        execute_process(
+            COMMAND ${VCPKG_EXEC} install boost --triplet x64-windows-static --recurse
+            WORKING_DIRECTORY ${VCPKG_ROOT})
 
-        message ("Setting CGAL MACROS")
         set (Boost_INCLUDE_DIRS "${VCPKG_ROOT}/installed/x64-windows-static/include" )
-        set (Cgal_INCLUDE_DIRS "${VCPKG_ROOT}/installed/x64-windows-static/include" )
-        set (Cgal_LIBRARY "${VCPKG_ROOT}/installed/x64-windows-static/lib" )
-        message (${Cgal_INCLUDE_DIRS})
 
     endif()
 endif()
@@ -77,9 +73,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../external/CGAL-5.6.2/includ
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../external/cinolib/external/eigen)
 
-
-add_executable(${PROJECT_NAME}-ransac main-ransac.cpp)
-add_executable(${PROJECT_NAME}-reg-growing main-fit.cpp)
+add_executable(${PROJECT_NAME}-shape-detection-ransac main-ransac.cpp)
+add_executable(${PROJECT_NAME}-shape-detection-reg-growing main-fit.cpp)
+add_executable(${PROJECT_NAME}-scaline-normals main-scanline-normals.cpp)
 
 #target_link_libraries(${PROJECT_NAME}-ransac PUBLIC CGAL::CGAL CGAL::CGAL_Core)
 #target_link_libraries(${PROJECT_NAME}-fit PUBLIC CGAL::CGAL CGAL::CGAL_Core)
