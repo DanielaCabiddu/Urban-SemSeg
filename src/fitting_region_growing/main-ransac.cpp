@@ -166,6 +166,79 @@ int main (int argc, char** argv)
     // Print number of detected shapes.
     std::cout << ransac.shapes().end() - ransac.shapes().begin()
               << " shapes detected." << std::endl;
+
+    // Efficient_ransac::shapes() provides
+    // an iterator range to the detected shapes.
+    Efficient_ransac::Shape_range shapes = ransac.shapes();
+    Efficient_ransac::Shape_range::iterator it = shapes.begin();
+
+    unsigned int plane_counter =0;
+    unsigned int cyl_counter =0;
+
+    while (it != shapes.end()) {
+
+        std::ofstream output_file;
+
+        // Get specific parameters depending on the detected shape.
+        if (Plane* plane = dynamic_cast<Plane*>(it->get())) {
+
+            output_file.open("Plane-" + std::to_string(plane_counter++) + ".xyz");
+
+            Kernel::Vector_3 normal = plane->plane_normal();
+            std::cout << "Plane with normal " << normal << std::endl;
+
+            // Plane shape can also be converted to the Kernel::Plane_3.
+            std::cout << "Kernel::Plane_3: " <<
+                static_cast<Kernel::Plane_3>(*plane) << std::endl;
+
+        } else if (Cylinder* cyl = dynamic_cast<Cylinder*>(it->get())) {
+
+            output_file.open("Cylinder-" + std::to_string(plane_counter++) + ".xyz");
+
+            Kernel::Line_3 axis = cyl->axis();
+            FT radius = cyl->radius();
+
+            std::cout << "Cylinder with axis "
+                      << axis << " and radius " << radius << std::endl;
+
+        } else {
+
+            // Print the parameters of the detected shape.
+            // This function is available for any type of shape.
+            std::cout << (*it)->info() << std::endl;
+        }
+
+        // Sums distances of points to the detected shapes.
+        FT sum_distances = 0;
+
+        // Iterate through point indices assigned to each detected shape.
+        std::vector<std::size_t>::const_iterator
+            index_it = (*it)->indices_of_assigned_points().begin();
+
+        while (index_it != (*it)->indices_of_assigned_points().end()) {
+
+            // Retrieve point.
+            const Point_with_normal& p = *(points.begin() + (*index_it));
+
+            output_file << p.first.x() << " " << p.first.y() << " " << p.first.z() << std::endl;
+
+            // Adds Euclidean distance between point and shape.
+            sum_distances += CGAL::sqrt((*it)->squared_distance(p.first));
+
+            // Proceed with the next point.
+            index_it++;
+        }
+
+        sum_distances /= (*it)->indices_of_assigned_points().size();
+
+        std::cout << "AVG point distance from shape : " << sum_distances << std::endl;
+
+        output_file.close();
+
+        // Proceed with the next detected shape.
+        it++;
+    }
+
     return EXIT_SUCCESS;
 
 
