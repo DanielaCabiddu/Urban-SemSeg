@@ -1,3 +1,4 @@
+#include "CGAL/IO/write_xyz_points.h"
 #include <tclap/CmdLine.h>
 
 #include <CGAL/Simple_cartesian.h>
@@ -17,9 +18,10 @@ using Scanline_id_map = CGAL::Nth_of_tuple_property_map<3, Point_with_info>;
 
 void dump (const char* filename, const std::vector<Point_with_info>& points)
 {
-    std::ofstream ofile (filename, std::ios::binary);
-    CGAL::IO::set_binary_mode(ofile);
-    CGAL::IO::write_PLY
+    std::ofstream ofile (filename /*, std::ios::binary*/);
+    ofile.precision(10);
+    // CGAL::IO::set_binary_mode(ofile);
+    CGAL::IO::write_XYZ
         (ofile, points,
          CGAL::parameters::point_map (Point_map()).
          normal_map (Normal_map()));
@@ -41,7 +43,7 @@ int main (int argc, char** argv)
         // that it contains.
         TCLAP::CmdLine cmd("", ' ', "0.9");
 
-        TCLAP::ValueArg<std::string> inputFileArg ("i","input","Input File",true,"","string");
+        TCLAP::ValueArg<std::string> inputFileArg ("i","input","Input File [.las]",true,"","string");
         TCLAP::ValueArg<std::string> outputFileArg ("o","output","Output File [.xyz]",true,"","string");
 
         cmd.add( inputFileArg );
@@ -77,6 +79,8 @@ int main (int argc, char** argv)
         return EXIT_FAILURE;
     }
 
+    std::string fname_no_ext = ofname.substr(0, ofname.find_last_of("."));
+
 
     std::cerr << "Estimating normals" << std::endl;
     CGAL::jet_estimate_normals<CGAL::Parallel_if_available_tag>
@@ -91,7 +95,7 @@ int main (int argc, char** argv)
          normal_map (Normal_map()).
          scan_angle_map (Scan_angle_map()).
          scanline_id_map (Scanline_id_map()));
-    dump("out_angle_and_flag.ply", points);
+    dump(std::string(fname_no_ext + "_angle_and_flag.xyz").c_str(), points);
 
     std::cerr << "Orienting normals using scan direction flag only" << std::endl;
     CGAL::scanline_orient_normals
@@ -99,7 +103,7 @@ int main (int argc, char** argv)
          CGAL::parameters::point_map (Point_map()).
          normal_map (Normal_map()).
          scanline_id_map (Scanline_id_map()));
-    dump("out_flag.ply", points);
+    dump(std::string(fname_no_ext + "_flag.xyz").c_str(), points);
 
     std::cerr << "Orienting normals using scan angle only" << std::endl;
     CGAL::scanline_orient_normals
@@ -107,14 +111,14 @@ int main (int argc, char** argv)
          CGAL::parameters::point_map (Point_map()).
          normal_map (Normal_map()).
          scan_angle_map (Scan_angle_map()));
-    dump("out_angle.ply", points);
+    dump(std::string(fname_no_ext + "_angle.xyz").c_str(), points);
 
     std::cerr << "Orienting normals using no additional info" << std::endl;
     CGAL::scanline_orient_normals
         (points,
          CGAL::parameters::point_map (Point_map()).
          normal_map (Normal_map()));
-    dump("out_nothing.ply", points);
+    dump(std::string(fname_no_ext + "_nothing.xyz").c_str(), points);
 
     return EXIT_SUCCESS;
 }
