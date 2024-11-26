@@ -63,13 +63,32 @@ if (NOT Boost_FOUND AND MSVC)
             COMMAND ${VCPKG_EXEC} install boost --triplet x64-windows-static --recurse
             WORKING_DIRECTORY ${VCPKG_ROOT})
 
+        execute_process(
+            COMMAND ${VCPKG_EXEC} install liblas --triplet x64-windows-static --recurse
+            WORKING_DIRECTORY ${VCPKG_ROOT})
+
         set (Boost_INCLUDE_DIRS "${VCPKG_ROOT}/installed/x64-windows-static/include" )
+        set (Boost_INCLUDE_DIR "${Boost_INCLUDE_DIRS}" )
+
 
     endif()
 endif()
 
+# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../external/CGAL-5.6.2/include)
+find_package (CGAL REQUIRED PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../../external/CGAL-5.6.2 NO_DEFAULT_PATH)
+
+message(${CGAL_INCLUDE_DIRS})
+include_directories(${CGAL_INCLUDE_DIRS})
+
+set (LIBLAS_DIR ${CGAL_INCLUDE_DIRS}/../external/LAStools/LASlib)  ### https://github.com/CGAL/LAStools.git
+include_directories(${LIBLAS_DIR}/inc)
+message (${LIBLAS_DIR}/inc)
+
+set (LIBZIP_DIR ${CGAL_INCLUDE_DIRS}/../external/LAStools/LASzip)
+include_directories(${LIBZIP_DIR}/src)
+message (${LIBZIP_DIR}/src)
+
 include_directories(${Boost_INCLUDE_DIRS})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../external/CGAL-5.6.2/include)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../external/cinolib/external/eigen)
 
@@ -78,4 +97,4 @@ add_executable(${PROJECT_NAME}-shape-detection-reg-growing main-fit.cpp)
 add_executable(${PROJECT_NAME}-scaline-normals main-scanline-normals.cpp)
 
 #target_link_libraries(${PROJECT_NAME}-ransac PUBLIC CGAL::CGAL CGAL::CGAL_Core)
-#target_link_libraries(${PROJECT_NAME}-fit PUBLIC CGAL::CGAL CGAL::CGAL_Core)
+target_link_libraries(${PROJECT_NAME}-scaline-normals PUBLIC ${LIBLAS_DIR}/../build-Windows/Release/las.lib)

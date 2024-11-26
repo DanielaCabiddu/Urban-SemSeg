@@ -1,34 +1,35 @@
 #include <tclap/CmdLine.h>
 
 #include <CGAL/Simple_cartesian.h>
+#include <CGAL/IO/read_las_points.h>
+#include <CGAL/IO/write_ply_points.h>
+#include <CGAL/jet_estimate_normals.h>
+#include <CGAL/scanline_orient_normals.h>
 
-#include <CGAL/edge_aware_upsample_point_set.h>
-#include <CGAL/IO/read_points.h>
-#include <CGAL/IO/write_points.h>
+using Kernel = CGAL::Simple_cartesian<double>;
+using Point_3 = Kernel::Point_3;
+using Vector_3 = Kernel::Vector_3;
+using Point_with_info = std::tuple<Point_3, Vector_3, float, unsigned char>;
+using Point_map = CGAL::Nth_of_tuple_property_map<0, Point_with_info>;
+using Normal_map = CGAL::Nth_of_tuple_property_map<1, Point_with_info>;
+using Scan_angle_map = CGAL::Nth_of_tuple_property_map<2, Point_with_info>;
+using Scanline_id_map = CGAL::Nth_of_tuple_property_map<3, Point_with_info>;
 
-#include <vector>
-#include <fstream>
-
-// types
-typedef CGAL::Simple_cartesian<double> Kernel;
-typedef Kernel::Point_3 Point;
-typedef Kernel::Vector_3 Vector;
-
-// Point with normal vector stored in a std::pair.
-typedef std::pair<Point, Vector> PointVectorPair;
-
-// Concurrency
-typedef CGAL::Parallel_if_available_tag Concurrency_tag;
-
-int main(int argc, char* argv[])
+void dump (const char* filename, const std::vector<Point_with_info>& points)
 {
-    std::string input_filename;// = (argc>1) ? argv[1] : CGAL::data_file_path("points_3/before_upsample.xyz");
-    std::string output_filename;/// = (argc>2) ? argv[2] : "data/before_upsample_UPSAMPLED.xyz";
+    std::ofstream ofile (filename, std::ios::binary);
+    CGAL::IO::set_binary_mode(ofile);
+    CGAL::IO::write_PLY
+        (ofile, points,
+         CGAL::parameters::point_map (Point_map()).
+         normal_map (Normal_map()));
 
-    //Algorithm parameters
-    double sharpness_angle = 25;   // control sharpness of the result.
-    double edge_sensitivity = 0;    // higher values will sample more points near the edges
-    double neighbor_radius = 0.25;  // initial size of neighborhood.
+}
+
+int main (int argc, char** argv)
+{
+    std::string fname;// (argc > 1 ? argv[1] : "data/urban.las");
+    std::string ofname;
 
     try {
 
@@ -41,33 +42,17 @@ int main(int argc, char* argv[])
         TCLAP::CmdLine cmd("", ' ', "0.9");
 
         TCLAP::ValueArg<std::string> inputFileArg ("i","input","Input File",true,"","string");
-        TCLAP::ValueArg<std::string> outputFileArg ("o","output","Output Directory",true,"","string");
-
-        TCLAP::ValueArg<std::string> angleArg ("a","angle","Control sharpness of the result [default: " + std::to_string(sharpness_angle) + "].",false,"","float");
-        TCLAP::ValueArg<std::string> sensitArg ("s","sensitivity","Higher values will sample more points near the edges [default: " + std::to_string(edge_sensitivity) + "].",false,"","float");
-        TCLAP::ValueArg<std::string> radiusArg ("r","radius","Initial size of neighborhood [default: " + std::to_string(neighbor_radius) + "].",false,"","float");
+        TCLAP::ValueArg<std::string> outputFileArg ("o","output","Output File [.xyz]",true,"","string");
 
         cmd.add( inputFileArg );
         cmd.add( outputFileArg );
 
-        cmd.add(angleArg);
-        cmd.add(sensitArg);
-        cmd.add(radiusArg);
 
         // Parse the argv array.
         cmd.parse( argc, argv );
 
-        input_filename = inputFileArg.getValue().c_str();
-        output_filename = outputFileArg.getValue().c_str();
-
-        if (angleArg.isSet())
-            sharpness_angle = std::atof(angleArg.getValue().c_str());
-
-        if (sensitArg.isSet())
-            edge_sensitivity = std::atof(sensitArg.getValue().c_str());
-
-        if (radiusArg.isSet())
-            neighbor_radius = std::atof(radiusArg.getValue().c_str());
+        fname = inputFileArg.getValue();
+        ofname = outputFileArg.getValue();
     }
     catch (std::exception e)
     {
@@ -75,36 +60,61 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    // Reads a .xyz point set file in points[], *with normals*.
-    std::vector<PointVectorPair> points;
-    if(!CGAL::IO::read_points(input_filename,
-                               std::back_inserter(points),
-                               CGAL::parameters::point_map(CGAL::First_of_pair_property_map<PointVectorPair>())
-                                   .normal_map(CGAL::Second_of_pair_property_map<PointVectorPair>())))
+    std::vector<Point_with_info> points;
+
+    std::cerr << "Reading input file " << fname << std::endl;
+    std::ifstream ifile (fname, std::ios::binary);
+    if (!ifile ||
+        !CGAL::IO::read_LAS_with_properties
+        (ifile, std::back_inserter (points),
+         CGAL::IO::make_las_point_reader (Point_map()),
+         std::make_pair (Scan_angle_map(),
+                        CGAL::IO::LAS_property::Scan_angle()),
+         std::make_pair (Scanline_id_map(),
+                        CGAL::IO::LAS_property::Scan_direction_flag())))
     {
-        std::cerr << "Error: cannot read file " << input_filename << std::endl;
+        std::cerr << "Can't read " << fname << std::endl;
         return EXIT_FAILURE;
     }
 
-    const std::size_t number_of_output_points = points.size() * 4;
 
-    //Run algorithm
-    CGAL::edge_aware_upsample_point_set<Concurrency_tag>(
-        points,
-        std::back_inserter(points),
-        CGAL::parameters::point_map(CGAL::First_of_pair_property_map<PointVectorPair>()).
-        normal_map(CGAL::Second_of_pair_property_map<PointVectorPair>()).
-        sharpness_angle(sharpness_angle).
-        edge_sensitivity(edge_sensitivity).
-        neighbor_radius(neighbor_radius).
-        number_of_output_points(number_of_output_points));
+    std::cerr << "Estimating normals" << std::endl;
+    CGAL::jet_estimate_normals<CGAL::Parallel_if_available_tag>
+        (points, 12,
+         CGAL::parameters::point_map (Point_map()).
+         normal_map (Normal_map()));
 
-    // Saves point set.
-    if(!CGAL::IO::write_points(output_filename, points,
-                                CGAL::parameters::point_map(CGAL::First_of_pair_property_map<PointVectorPair>())
-                                    .normal_map(CGAL::Second_of_pair_property_map<PointVectorPair>())
-                                    .stream_precision(17)))
-        return EXIT_FAILURE;
+    std::cerr << "Orienting normals using scan angle and direction flag" << std::endl;
+    CGAL::scanline_orient_normals
+        (points,
+         CGAL::parameters::point_map (Point_map()).
+         normal_map (Normal_map()).
+         scan_angle_map (Scan_angle_map()).
+         scanline_id_map (Scanline_id_map()));
+    dump("out_angle_and_flag.ply", points);
+
+    std::cerr << "Orienting normals using scan direction flag only" << std::endl;
+    CGAL::scanline_orient_normals
+        (points,
+         CGAL::parameters::point_map (Point_map()).
+         normal_map (Normal_map()).
+         scanline_id_map (Scanline_id_map()));
+    dump("out_flag.ply", points);
+
+    std::cerr << "Orienting normals using scan angle only" << std::endl;
+    CGAL::scanline_orient_normals
+        (points,
+         CGAL::parameters::point_map (Point_map()).
+         normal_map (Normal_map()).
+         scan_angle_map (Scan_angle_map()));
+    dump("out_angle.ply", points);
+
+    std::cerr << "Orienting normals using no additional info" << std::endl;
+    CGAL::scanline_orient_normals
+        (points,
+         CGAL::parameters::point_map (Point_map()).
+         normal_map (Normal_map()));
+    dump("out_nothing.ply", points);
 
     return EXIT_SUCCESS;
 }
