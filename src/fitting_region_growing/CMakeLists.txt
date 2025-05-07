@@ -95,6 +95,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../external/cinolib/external/
 add_executable(${PROJECT_NAME}-shape-detection-ransac main-ransac.cpp)
 add_executable(${PROJECT_NAME}-shape-detection-reg-growing main-fit.cpp)
 add_executable(${PROJECT_NAME}-scaline-normals main-scanline-normals.cpp)
+add_executable(${PROJECT_NAME}-shape-detection-reg-growing-cyl main-fit-cylinder.cpp)
 
 #target_link_libraries(${PROJECT_NAME}-ransac PUBLIC CGAL::CGAL CGAL::CGAL_Core)
 target_link_libraries(${PROJECT_NAME}-scaline-normals PUBLIC ${LIBLAS_DIR}/../build-Windows/Release/las.lib)
